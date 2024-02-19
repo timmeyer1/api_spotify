@@ -20,8 +20,8 @@ class Song
     private ?int $id = null;
 
     // Ajout d'une propriété file
-    #[Vich\UploadableField(mapping: 'songs', fileNameProperty: 'filePath')]
-    private ?File $filePathFile = null;
+    // #[Vich\UploadableField(mapping: 'songs', fileNameProperty: 'filePath')]
+    // private ?File $filePathFile = null;
 
     #[ORM\Column(length: 255)]
     private ?string $title = null;
@@ -29,8 +29,8 @@ class Song
     #[ORM\Column(length: 255)]
     private ?string $file_path = null;
 
-    #[ORM\Column(type: Types::TIME_MUTABLE)]
-    private ?\DateTimeInterface $duration = null;
+    #[ORM\Column]
+    private ?int $duration = null;
 
     #[ORM\ManyToMany(targetEntity: Playlist::class, mappedBy: 'song')]
     private Collection $playlists;
@@ -72,12 +72,12 @@ class Song
         return $this;
     }
 
-    public function getDuration(): ?\DateTimeInterface
+    public function getDuration(): ?int
     {
         return $this->duration;
     }
 
-    public function setDuration(\DateTimeInterface $duration): static
+    public function setDuration(int $duration): static
     {
         $this->duration = $duration;
 

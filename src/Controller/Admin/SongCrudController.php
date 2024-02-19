@@ -28,26 +28,47 @@ class SongCrudController extends AbstractCrudController
     
 
     public function configureFields(string $pageName): iterable
+
     {
+
         return [
+
             IdField::new('id')->hideOnForm(),
+
             TextField::new('title', 'Titre de la chanson'),
-            TextEditorField::new('filePathFile', 'Chosir un fichier mp3')
-                ->setFormType(VichFileType::class)
-                ->hideOnDetail()
-                ->hideOnIndex(),
-            TextField::new('filePath', 'Nom du fichier mp3')
-                ->hideOnForm()
-                ->hideOnIndex(),
-            ImageField::new('filePath', 'Choisir un fichier mp3')
+
+            ImageField::new('file_path', 'Choisir mp3')
+
                 ->setBasePath('/upload/files/music')
-                ->hideOnForm()
+
+                ->setUploadDir('public/upload/files/music')
+
                 ->hideOnIndex()
-                ->hideOnDetail()
-            ->addHtmlContentsToBody('<p>Hello</p>'),
-            NumberField::new('duration', 'Duree de la chanson'),
+
+                ->hideOnDetail(),
+
+            TextField::new('file_path', 'Aperçu')
+
+                ->hideOnForm()
+
+                ->formatValue(function ($value, $entity) {
+
+                    return '<audio controls>
+
+                                <source src="/upload/files/music/' . $value . '" type="audio/mpeg">
+
+                            </audio>';
+
+                }),
+
+            // NumberField::new('duration', 'durée du titre')
+
+            //     ->hideOnForm(),
+
             AssociationField::new('album', 'Album associé'),
+
         ];
+
     }
 
     public function configureActions(Actions $actions): Actions
