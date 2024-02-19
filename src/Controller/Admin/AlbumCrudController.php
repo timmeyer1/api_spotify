@@ -31,7 +31,7 @@ class AlbumCrudController extends AbstractCrudController
         return [
             IdField::new('id')->hideOnForm(),
             TextField::new('title', 'Titre de l\'album'),
-            TextEditorField::new('description', 'Description de l\'album'),
+            // TextEditorField::new('description', 'Description de l\'album'),
 
             // Champs d'association avec une autre table
             AssociationField::new('genre', 'Catégorie de l\'album'),

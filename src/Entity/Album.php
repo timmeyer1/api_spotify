@@ -18,7 +18,7 @@ use ApiPlatform\Metadata\ApiResource;
     denormalizationContext: ['groups' => ['album:write']],
 )]
 #[ApiFilter(
-    SearchFilter::class, properties: ['id' => 'exact', 'title' => 'exact', 'description' => 'partial', 'genre.label' => 'exact']
+    SearchFilter::class, properties: ['id' => 'exact', 'title' => 'exact', 'genre.label' => 'exact']
 )]
 class Album
 {
@@ -51,10 +51,14 @@ class Album
     #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'albums')]
     private Collection $user;
 
+    #[ORM\OneToMany(targetEntity: Song::class, mappedBy: 'album')]
+    private Collection $songs;
+
 
     public function __construct()
     {
         $this->user = new ArrayCollection();
+        $this->songs = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -182,6 +186,36 @@ class Album
     public function removeUser(User $user): static
     {
         $this->user->removeElement($user);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Song>
+     */
+    public function getSongs(): Collection
+    {
+        return $this->songs;
+    }
+
+    public function addSong(Song $song): static
+    {
+        if (!$this->songs->contains($song)) {
+            $this->songs->add($song);
+            $song->setAlbum($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSong(Song $song): static
+    {
+        if ($this->songs->removeElement($song)) {
+            // set the owning side to null (unless already changed)
+            if ($song->getAlbum() === $this) {
+                $song->setAlbum(null);
+            }
+        }
 
         return $this;
     }

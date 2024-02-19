@@ -35,6 +35,9 @@ class Song
     #[ORM\ManyToMany(targetEntity: Playlist::class, mappedBy: 'song')]
     private Collection $playlists;
 
+    #[ORM\ManyToOne(inversedBy: 'songs')]
+    private ?Album $album = null;
+
     public function __construct()
     {
         $this->playlists = new ArrayCollection();
@@ -121,4 +124,16 @@ class Song
     /**
      * @return Collection<int, User>
      */
+
+    public function getAlbum(): ?Album
+    {
+        return $this->album;
+    }
+
+    public function setAlbum(?Album $album): static
+    {
+        $this->album = $album;
+
+        return $this;
+    }
 }
