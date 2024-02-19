@@ -29,7 +29,7 @@ class Song
     #[ORM\Column(length: 255)]
     private ?string $file_path = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?int $duration = null;
 
     #[ORM\ManyToMany(targetEntity: Playlist::class, mappedBy: 'song')]
