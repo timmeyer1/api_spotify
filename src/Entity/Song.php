@@ -20,8 +20,8 @@ class Song
     private ?int $id = null;
 
     // Ajout d'une propriété file
-    // #[Vich\UploadableField(mapping: 'songs', fileNameProperty: 'filePath')]
-    // private ?File $filePathFile = null;
+    #[Vich\UploadableField(mapping: 'songs', fileNameProperty: 'filePath')]
+    private ?File $filePathFile = null;
 
     #[ORM\Column(length: 255)]
     private ?string $title = null;

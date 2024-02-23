@@ -19,7 +19,7 @@ class AlbumCrudController extends AbstractCrudController
     // on créé nos constantes
     public const ALBUM_BASE_PATH = '/uploads/images/albums';
 
-    public const ALNBUM_UPLOAD_DIR = 'public/uploads/images/albums';
+    public const ALBUM_UPLOAD_DIR = 'public/uploads/images/albums';
 
     public static function getEntityFqcn(): string
     {
@@ -38,7 +38,7 @@ class AlbumCrudController extends AbstractCrudController
             AssociationField::new('artist', 'Nom de l\'artiste'),
             ImageField::new('imagePath', 'Choisir une image de couverture')
                 ->setBasePath(self::ALBUM_BASE_PATH)
-                ->setUploadDir(self::ALNBUM_UPLOAD_DIR)
+                ->setUploadDir(self::ALBUM_UPLOAD_DIR)
                 ->setUploadedFileNamePattern(
                     // on donne un nom de fichier unique pour éviter de venir écraszer une image en  cas de même nom
                     fn (UploadedFile $file): string => sprintf(
