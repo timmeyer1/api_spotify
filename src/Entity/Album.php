@@ -2,7 +2,7 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Doctrine\Odm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -18,7 +18,7 @@ use ApiPlatform\Metadata\ApiResource;
     denormalizationContext: ['groups' => ['album:write']],
 )]
 #[ApiFilter(
-    SearchFilter::class, properties: ['id' => 'exact', 'title' => 'exact', 'genre.label' => 'exact']
+    SearchFilter::class, properties: ['id' => 'exact', 'title' => 'exact', 'description' => 'exact', 'genre.label' => 'exact']
 )]
 class Album
 {
