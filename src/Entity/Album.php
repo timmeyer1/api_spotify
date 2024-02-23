@@ -162,10 +162,7 @@ class Album
 
         return $this;
     }
-
-    // FIXME: A supprimer
-    // TODO: ajouter truc des relations sur cahier de cours
-
+    
     /**
      * @return Collection<int, User>
      */
