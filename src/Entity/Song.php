@@ -2,13 +2,13 @@
 
 namespace App\Entity;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
+
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\SongRepository;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
+
 
 #[ORM\Entity(repositoryClass: SongRepository::class)]
 #[Vich\Uploadable]
@@ -17,31 +17,28 @@ class Song
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['album:read', 'artist:read', 'user:read'])]
     private ?int $id = null;
 
-    // Ajout d'une propriété file
-    #[Vich\UploadableField(mapping: 'songs', fileNameProperty: 'filePath')]
-    private ?File $filePathFile = null;
-
     #[ORM\Column(length: 255)]
+    #[Groups(['album:read', 'artist:read', 'user:read'])]
     private ?string $title = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $file_path = null;
+    #[Groups(['album:read', 'artist:read', 'user:read'])]
+    private ?string $filePath = null;
 
-    #[ORM\Column(nullable: true)]
+    #[Vich\UploadableField(mapping: 'songs', fileNameProperty: 'filePath')]
+    private ?File $filePathFile = null;
+
+
+    #[ORM\Column]
+    #[Groups(['album:read', 'artist:read', 'user:read'])]
     private ?int $duration = null;
 
-    #[ORM\ManyToMany(targetEntity: Playlist::class, mappedBy: 'song')]
-    private Collection $playlists;
-
     #[ORM\ManyToOne(inversedBy: 'songs')]
+    #[ORM\JoinColumn(nullable: false)]
     private ?Album $album = null;
-
-    public function __construct()
-    {
-        $this->playlists = new ArrayCollection();
-    }
 
     public function getId(): ?int
     {
@@ -62,14 +59,25 @@ class Song
 
     public function getFilePath(): ?string
     {
-        return $this->file_path;
+        return $this->filePath;
     }
 
-    public function setFilePath(string $file_path): static
+    public function setFilePath(string $filePath): static
     {
-        $this->file_path = $file_path;
+        $this->filePath = $filePath;
 
         return $this;
+    }
+
+    //ici méthode de $filePathFile
+    public function getFilePathFile(): ?File
+    {
+        return $this->filePathFile;
+    }
+
+    public function setFilePathFile(?File $filePathFile): void
+    {
+        $this->filePathFile = $filePathFile;
     }
 
     public function getDuration(): ?int
@@ -83,47 +91,6 @@ class Song
 
         return $this;
     }
-    
-    public function getFilePathFile(): ?File
-    {
-        return $this->filePathFile;
-    }
-
-    public function setFilePathFile(?File $filePathFile = null): void
-    {
-        $this->filePathFile = $filePathFile;
-    }
-
-    /**
-     * @return Collection<int, Playlist>
-     */
-    public function getPlaylists(): Collection
-    {
-        return $this->playlists;
-    }
-
-    public function addPlaylist(Playlist $playlist): static
-    {
-        if (!$this->playlists->contains($playlist)) {
-            $this->playlists->add($playlist);
-            $playlist->addSong($this);
-        }
-
-        return $this;
-    }
-
-    public function removePlaylist(Playlist $playlist): static
-    {
-        if ($this->playlists->removeElement($playlist)) {
-            $playlist->removeSong($this);
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, User>
-     */
 
     public function getAlbum(): ?Album
     {

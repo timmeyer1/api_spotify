@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use ApiPlatform\Metadata\ApiFilter;
 use App\Repository\ArtistRepository;
@@ -42,18 +43,24 @@ class Artist
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['album:read', 'artist:read', 'user:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups("album:read")]
+    #[Groups(['album:read', 'artist:read', 'user:read'])]
     private ?string $name = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['album:read', 'artist:read', 'user:read'])]
     private ?string $biography = null;
 
-    #[ORM\OneToMany(targetEntity: Album::class, mappedBy: 'artist')]
+    #[ORM\OneToMany(mappedBy: 'artist', targetEntity: Album::class)]
+    #[Groups(['artist:read'])]
     private Collection $albums;
 
+    #[Groups(['album:read', 'artist:read', 'user:read'])]
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $imagePath = null;
 
     public function __construct()
     {
@@ -92,14 +99,6 @@ class Artist
     /**
      * @return Collection<int, Album>
      */
-
-    /**
-     * @return Collection<int, Album>
-     */
-
-    /**
-     * @return Collection<int, Album>
-     */
     public function getAlbums(): Collection
     {
         return $this->albums;
@@ -130,5 +129,17 @@ class Artist
     public function __toString(): string
     {
         return $this->name;
+    }
+
+    public function getImagePath(): ?string
+    {
+        return $this->imagePath;
+    }
+
+    public function setImagePath(?string $imagePath): static
+    {
+        $this->imagePath = $imagePath;
+
+        return $this;
     }
 }

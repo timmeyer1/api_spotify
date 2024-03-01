@@ -2,10 +2,11 @@
 
 namespace App\Entity;
 
-use App\Repository\GenreRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\GenreRepository;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: GenreRepository::class)]
 class Genre
@@ -13,12 +14,14 @@ class Genre
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['album:read', 'artist:read', 'user:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['album:read', 'artist:read', 'user:read'])]
     private ?string $label = null;
 
-    #[ORM\OneToMany(targetEntity: Album::class, mappedBy: 'genre')]
+    #[ORM\ManyToMany(targetEntity: Album::class, mappedBy: 'genre')]
     private Collection $albums;
 
     public function __construct()
@@ -43,11 +46,6 @@ class Genre
         return $this;
     }
 
-    public function __toString(): string
-    {
-        return $this->label;
-    }
-
     /**
      * @return Collection<int, Album>
      */
@@ -60,7 +58,7 @@ class Genre
     {
         if (!$this->albums->contains($album)) {
             $this->albums->add($album);
-            $album->setGenre($this);
+            $album->addGenre($this);
         }
 
         return $this;
@@ -69,12 +67,14 @@ class Genre
     public function removeAlbum(Album $album): static
     {
         if ($this->albums->removeElement($album)) {
-            // set the owning side to null (unless already changed)
-            if ($album->getGenre() === $this) {
-                $album->setGenre(null);
-            }
+            $album->removeGenre($this);
         }
 
         return $this;
+    }
+
+    public function __toString(): string
+    {
+        return $this->label ;
     }
 }

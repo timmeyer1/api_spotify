@@ -2,10 +2,11 @@
 
 namespace App\Entity;
 
-use App\Repository\PlaylistRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\PlaylistRepository;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: PlaylistRepository::class)]
 class Playlist
@@ -13,20 +14,24 @@ class Playlist
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['user:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['user:read', 'user:write'])]
     private ?string $title = null;
 
-    #[ORM\ManyToMany(targetEntity: Song::class, inversedBy: 'playlists')]
-    private Collection $song;
-
     #[ORM\ManyToOne(inversedBy: 'playlists')]
+    #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
+
+    #[ORM\ManyToMany(targetEntity: Song::class)]
+    #[Groups(['user:read', 'user:write'])]
+    private Collection $songs;
 
     public function __construct()
     {
-        $this->song = new ArrayCollection();
+        $this->songs = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -46,30 +51,6 @@ class Playlist
         return $this;
     }
 
-    /**
-     * @return Collection<int, Song>
-     */
-    public function getSong(): Collection
-    {
-        return $this->song;
-    }
-
-    public function addSong(Song $song): static
-    {
-        if (!$this->song->contains($song)) {
-            $this->song->add($song);
-        }
-
-        return $this;
-    }
-
-    public function removeSong(Song $song): static
-    {
-        $this->song->removeElement($song);
-
-        return $this;
-    }
-
     public function getUser(): ?User
     {
         return $this->user;
@@ -78,6 +59,30 @@ class Playlist
     public function setUser(?User $user): static
     {
         $this->user = $user;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Song>
+     */
+    public function getSongs(): Collection
+    {
+        return $this->songs;
+    }
+
+    public function addSong(Song $song): static
+    {
+        if (!$this->songs->contains($song)) {
+            $this->songs->add($song);
+        }
+
+        return $this;
+    }
+
+    public function removeSong(Song $song): static
+    {
+        $this->songs->removeElement($song);
 
         return $this;
     }

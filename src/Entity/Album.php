@@ -2,18 +2,20 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use ApiPlatform\Metadata\ApiFilter;
 use App\Repository\AlbumRepository;
 use ApiPlatform\Metadata\ApiResource;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
-use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
-use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
+use Symfony\Component\Serializer\Annotation\Groups;
+
 
 #[ORM\Entity(repositoryClass: AlbumRepository::class)]
-// On expose l'entité à l'api
+//on expose l'entité à l'API
 #[ApiResource(
     normalizationContext: ['groups' => ['album:read']],
     denormalizationContext: ['groups' => ['album:write']]
@@ -41,40 +43,52 @@ class Album
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['album:read', 'artist:read', 'user:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['album:read', 'artist:read', 'user:read'])]
     private ?string $title = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $releaseDate = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(length: 255)]
+    #[Groups(['album:read', 'artist:read', 'user:read'])]
     private ?string $imagePath = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    private ?\DateTimeInterface $createdAt = null;
+    #[ORM\Column]
+    private ?int $createdAt = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    private ?\DateTimeInterface $updatedAt = null;
+    #[ORM\Column(nullable: true)]
+    private ?int $updatedAt = null;
+
+    #[ORM\ManyToMany(targetEntity: Genre::class, inversedBy: 'albums')]
+    #[Groups(['album:read', 'artist:read', 'user:read'])]
+    private Collection $genre;
 
     #[ORM\ManyToOne(inversedBy: 'albums')]
+    #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['album:read', 'user:read'])]
     private ?Artist $artist = null;
 
-    #[ORM\ManyToOne(inversedBy: 'albums')]
-    private ?Genre $genre = null;
-
-    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'albums')]
-    private Collection $user;
-
-    #[ORM\OneToMany(targetEntity: Song::class, mappedBy: 'album')]
+    #[ORM\OneToMany(mappedBy: 'album', targetEntity: Song::class)]
+    #[Groups(['album:read', 'artist:read', 'user:read'])]
     private Collection $songs;
 
+    #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'albums')]
+    private Collection $users;
+
+    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Groups(['album:read', 'artist:read', 'user:read'])]
+    private ?\DateTimeInterface $releaseDate = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(['album:read', 'artist:read', 'user:read'])]
+    private ?bool $isActive = null;
 
     public function __construct()
     {
-        $this->user = new ArrayCollection();
+        $this->genre = new ArrayCollection();
         $this->songs = new ArrayCollection();
+        $this->users = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -94,66 +108,65 @@ class Album
         return $this;
     }
 
-    public function getReleaseDate(): ?\DateTimeInterface
-    {
-        return $this->releaseDate;
-    }
-
-    public function setReleaseDate(\DateTimeInterface $releaseDate): static
-    {
-        $this->releaseDate = $releaseDate;
-
-        return $this;
-    }
-
     public function getImagePath(): ?string
     {
         return $this->imagePath;
     }
 
-    public function setImagePath(?string $imagePath): static
+    public function setImagePath(string $imagePath): static
     {
         $this->imagePath = $imagePath;
 
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getCreatedAt(): ?int
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(?\DateTimeInterface $createdAt): static
+    public function setCreatedAt(int $createdAt): static
     {
         $this->createdAt = $createdAt;
 
         return $this;
     }
 
-    public function getUpdatedAt(): ?\DateTimeInterface
+    public function getUpdatedAt(): ?int
     {
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(?\DateTimeInterface $updatedAt): static
+    public function setUpdatedAt(?int $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
 
         return $this;
     }
 
-    public function __toString(): string
+    /**
+     * @return Collection<int, Genre>
+     */
+    public function getGenre(): Collection
     {
-        return $this->title;
+        return $this->genre;
     }
 
-    /**
-     * @return Collection<int, Artist>
-     */
+    public function addGenre(Genre $genre): static
+    {
+        if (!$this->genre->contains($genre)) {
+            $this->genre->add($genre);
+        }
 
-    /**
-     * @return Collection<int, Artist>
-     */
+        return $this;
+    }
+
+    public function removeGenre(Genre $genre): static
+    {
+        $this->genre->removeElement($genre);
+
+        return $this;
+    }
 
     public function getArtist(): ?Artist
     {
@@ -163,42 +176,6 @@ class Album
     public function setArtist(?Artist $artist): static
     {
         $this->artist = $artist;
-
-        return $this;
-    }
-
-    public function getGenre(): ?Genre
-    {
-        return $this->genre;
-    }
-
-    public function setGenre(?Genre $genre): static
-    {
-        $this->genre = $genre;
-
-        return $this;
-    }
-    
-    /**
-     * @return Collection<int, User>
-     */
-    public function getUser(): Collection
-    {
-        return $this->user;
-    }
-
-    public function addUser(User $user): static
-    {
-        if (!$this->user->contains($user)) {
-            $this->user->add($user);
-        }
-
-        return $this;
-    }
-
-    public function removeUser(User $user): static
-    {
-        $this->user->removeElement($user);
 
         return $this;
     }
@@ -229,6 +206,62 @@ class Album
                 $song->setAlbum(null);
             }
         }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    public function getUsers(): Collection
+    {
+        return $this->users;
+    }
+
+    public function addUser(User $user): static
+    {
+        if (!$this->users->contains($user)) {
+            $this->users->add($user);
+            $user->addAlbum($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUser(User $user): static
+    {
+        if ($this->users->removeElement($user)) {
+            $user->removeAlbum($this);
+        }
+
+        return $this;
+    }
+
+    public function getReleaseDate(): ?\DateTimeInterface
+    {
+        return $this->releaseDate;
+    }
+
+    public function setReleaseDate(\DateTimeInterface $releaseDate): static
+    {
+        $this->releaseDate = $releaseDate;
+
+        return $this;
+    }
+
+    public function __toString()
+    {
+        return $this->title;
+    }
+
+    public function isIsActive(): ?bool
+    {
+        return $this->isActive;
+    }
+
+    public function setIsActive(?bool $isActive): static
+    {
+        $this->isActive = $isActive;
 
         return $this;
     }
