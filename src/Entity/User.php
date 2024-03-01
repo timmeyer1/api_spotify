@@ -2,23 +2,43 @@
 
 namespace App\Entity;
 
-use App\Repository\UserRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use App\Repository\UserRepository;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiResource;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
+
+#[ApiResource(
+    normalizationContext: ['groups' => ['user:read']],
+    denormalizationContext: ['groups' => ['user:write']]
+)]
+
+#[ApiFilter(
+    SearchFilter::class,
+    properties: [
+        'email' => 'iexact',
+        'id' => 'exact',
+    ]
+)]
+
+
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['user:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
+    #[Groups(['user:read', 'user:write'])]
     private ?string $email = null;
 
     #[ORM\Column]
@@ -28,24 +48,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
+    #[Groups([ 'user:write'])]
     private ?string $password = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 100)]
+    #[Groups(['user:read', 'user:write'])]
     private ?string $nickname = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $created_at = null;
+    #[ORM\Column]
+    #[Groups(['user:read'])]
+    private ?int $createdAt = null;
 
-    #[ORM\ManyToMany(targetEntity: Album::class, mappedBy: 'user')]
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Playlist::class)]
+    #[Groups(['user:read', 'user:write'])]
+    private Collection $playlists;
+
+    #[ORM\ManyToMany(targetEntity: Album::class, inversedBy: 'users')]
+    #[Groups(['user:read', 'user:write'])]
     private Collection $albums;
 
-    #[ORM\OneToMany(targetEntity: Playlist::class, mappedBy: 'user')]
-    private Collection $playlists;
+    #[ORM\ManyToOne(inversedBy: 'users')]
+    #[Groups(['user:read', 'user:write'])]
+    private ?Avatar $avatar = null;
 
     public function __construct()
     {
-        $this->albums = new ArrayCollection();
         $this->playlists = new ArrayCollection();
+        $this->albums = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -130,45 +159,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getCreatedAt(): ?int
     {
-        return $this->created_at;
+        return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeInterface $created_at): static
+    public function setCreatedAt(int $createdAt): static
     {
-        $this->created_at = $created_at;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Song>
-     */
-
-    /**
-     * @return Collection<int, Album>
-     */
-    public function getAlbums(): Collection
-    {
-        return $this->albums;
-    }
-
-    public function addAlbum(Album $album): static
-    {
-        if (!$this->albums->contains($album)) {
-            $this->albums->add($album);
-            $album->addUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeAlbum(Album $album): static
-    {
-        if ($this->albums->removeElement($album)) {
-            $album->removeUser($this);
-        }
+        $this->createdAt = $createdAt;
 
         return $this;
     }
@@ -199,6 +197,42 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $playlist->setUser(null);
             }
         }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Album>
+     */
+    public function getAlbums(): Collection
+    {
+        return $this->albums;
+    }
+
+    public function addAlbum(Album $album): static
+    {
+        if (!$this->albums->contains($album)) {
+            $this->albums->add($album);
+        }
+
+        return $this;
+    }
+
+    public function removeAlbum(Album $album): static
+    {
+        $this->albums->removeElement($album);
+
+        return $this;
+    }
+
+    public function getAvatar(): ?Avatar
+    {
+        return $this->avatar;
+    }
+
+    public function setAvatar(?Avatar $avatar): static
+    {
+        $this->avatar = $avatar;
 
         return $this;
     }

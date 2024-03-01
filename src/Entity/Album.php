@@ -2,24 +2,40 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
-use ApiPlatform\Metadata\ApiFilter;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use ApiPlatform\Metadata\ApiFilter;
 use App\Repository\AlbumRepository;
 use ApiPlatform\Metadata\ApiResource;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
 
 #[ORM\Entity(repositoryClass: AlbumRepository::class)]
 // On expose l'entité à l'api
 #[ApiResource(
     normalizationContext: ['groups' => ['album:read']],
-    denormalizationContext: ['groups' => ['album:write']],
+    denormalizationContext: ['groups' => ['album:write']]
 )]
+//on ajoute des filtres
 #[ApiFilter(
-    SearchFilter::class, properties: ['id' => 'exact', 'title' => 'exact', 'description' => 'exact', 'genre.label' => 'exact']
+    SearchFilter::class, properties:[
+        'title' => 'ipartial',
+        'id' => 'exact',
+        'artist.name' => 'ipartial',
+        'artist.biography' => 'ipartial',
+        'genre.label' => 'iexact',
+        'songs.title' => 'ipartial',
+    ]
 )]
+
+#[ApiFilter(
+    BooleanFilter::class, properties:[
+        'isActive'
+    ]
+)]
+
 class Album
 {
     #[ORM\Id]
